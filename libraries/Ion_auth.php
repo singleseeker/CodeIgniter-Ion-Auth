@@ -57,9 +57,9 @@ class Ion_auth
 	 **/
 	public function __construct()
 	{
-		$this->load->config('ion_auth', TRUE);
+		$this->load->config('auth/ion_auth', TRUE);
 		$this->load->library('email');
-		$this->lang->load('ion_auth');
+		$this->lang->load('auth/ion_auth');
 		$this->load->helper('cookie');
 
 		// Load the session, CI2 as a library, CI3 uses it as a driver
@@ -75,8 +75,8 @@ class Ion_auth
 		// Load IonAuth MongoDB model if it's set to use MongoDB,
 		// We assign the model object to "ion_auth_model" variable.
 		$this->config->item('use_mongodb', 'ion_auth') ?
-			$this->load->model('ion_auth_mongodb_model', 'ion_auth_model') :
-			$this->load->model('ion_auth_model');
+			$this->load->model('auth/ion_auth_mongodb_model', 'ion_auth_model') :
+			$this->load->model('auth/ion_auth_model');
 
 		$this->_cache_user_in_group =& $this->ion_auth_model->_cache_user_in_group;
 

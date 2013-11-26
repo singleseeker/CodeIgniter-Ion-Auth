@@ -1,12 +1,11 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Auth extends CI_Controller {
+class Auth extends BASE_Controller {
 
 	function __construct()
 	{
 		parent::__construct();
-		$this->load->library('ion_auth');
-		$this->load->library('form_validation');
+		$this->load->library('auth/ion_auth');
 		$this->load->helper('url');
 
 		// Load MongoDB library instead of native db driver if required
@@ -772,6 +771,11 @@ class Auth extends CI_Controller {
 		$view_html = $this->load->view($view, $this->viewdata, $render);
 
 		if (!$render) return $view_html;
+	}
+
+	public function _remap()
+	{
+		show_404();
 	}
 
 }
