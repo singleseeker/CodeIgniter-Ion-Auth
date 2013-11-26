@@ -58,6 +58,7 @@ class Ion_auth
 	public function __construct()
 	{
 		$this->load->config('auth/ion_auth', TRUE);
+		$this->load->config('email', TRUE);
 		$this->load->library('email');
 		$this->lang->load('auth/ion_auth');
 		$this->load->helper('cookie');
@@ -86,7 +87,7 @@ class Ion_auth
 			$this->ion_auth_model->login_remembered_user();
 		}
 
-		$email_config = $this->config->item('email_config', 'ion_auth');
+		$email_config = $this->config->item('email_config', 'email');
 
 		if ($this->config->item('use_ci_email', 'ion_auth') && isset($email_config) && is_array($email_config))
 		{
