@@ -241,7 +241,7 @@ class Ion_auth_model extends CI_Model
 				$rounds = array('rounds' => $this->default_rounds);
 			}
 
-			$this->load->library('bcrypt',$rounds);
+			$this->load->library('auth/bcrypt',$rounds);
 		}
 
 		$this->trigger_events('model_constructor');
