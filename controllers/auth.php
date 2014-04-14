@@ -163,7 +163,7 @@ class Auth extends BASE_Controller {
 		}
 		else
 		{
-			$identity = $this->session->userdata($this->config->item('identity', 'ion_auth'));
+			$identity = $this->session->userdata('identity');
 
 			$change = $this->ion_auth->change_password($identity, $this->input->post('old'), $this->input->post('new'));
 
@@ -206,13 +206,19 @@ class Auth extends BASE_Controller {
 		}
 		else
 		{
-			// get identity for that email
-            $identity = $this->ion_auth->where('email', strtolower($this->input->post('email')))->users()->row();
-            if(empty($identity)) {
-                $this->ion_auth->set_message('forgot_password_email_not_found');
-                $this->session->set_flashdata('message', $this->ion_auth->messages());
-                redirect("auth/forgot_password", 'refresh');
-            }
+			// get identity from username or email
+			if ( $this->config->item('identity', 'ion_auth') == 'username' ){
+				$identity = $this->ion_auth->where('username', strtolower($this->input->post('email')))->users()->row();
+			}
+			else
+			{
+				$identity = $this->ion_auth->where('email', strtolower($this->input->post('email')))->users()->row();
+			}
+	            	if(empty($identity)) {
+		        	$this->ion_auth->set_message('forgot_password_email_not_found');
+		                $this->session->set_flashdata('message', $this->ion_auth->messages());
+                		redirect("auth/forgot_password", 'refresh');
+            		}
             
 			//run the forgotten password method to email an activation code to the user
 			$forgotten = $this->ion_auth->forgotten_password($identity->{$this->config->item('identity', 'ion_auth')});
@@ -398,10 +404,12 @@ class Auth extends BASE_Controller {
 			redirect('auth', 'refresh');
 		}
 
+		$tables = $this->config->item('tables','ion_auth');
+		
 		//validate form input
 		$this->form_validation->set_rules('first_name', $this->lang->line('create_user_validation_fname_label'), 'required|xss_clean');
 		$this->form_validation->set_rules('last_name', $this->lang->line('create_user_validation_lname_label'), 'required|xss_clean');
-		$this->form_validation->set_rules('email', $this->lang->line('create_user_validation_email_label'), 'required|valid_email|is_unique[users.email]');
+		$this->form_validation->set_rules('email', $this->lang->line('create_user_validation_email_label'), 'required|valid_email|is_unique['.$tables['users'].'.email]');
 		$this->form_validation->set_rules('phone', $this->lang->line('create_user_validation_phone_label'), 'required|xss_clean');
 		$this->form_validation->set_rules('company', $this->lang->line('create_user_validation_company_label'), 'required|xss_clean');
 		$this->form_validation->set_rules('password', $this->lang->line('create_user_validation_password_label'), 'required|min_length[' . $this->config->item('min_password_length', 'ion_auth') . ']|max_length[' . $this->config->item('max_password_length', 'ion_auth') . ']|matches[password_confirm]');
@@ -485,7 +493,7 @@ class Auth extends BASE_Controller {
 	{
 		$this->data['title'] = "Edit User";
 
-		if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin())
+		if (!$this->ion_auth->logged_in() || (!$this->ion_auth->is_admin() && !($this->ion_auth->user()->row()->id == $id)))
 		{
 			redirect('auth', 'refresh');
 		}
@@ -516,17 +524,21 @@ class Auth extends BASE_Controller {
 				'phone'      => $this->input->post('phone'),
 			);
 
-			//Update the groups user belongs to
-			$groupData = $this->input->post('groups');
+			// Only allow updating groups if user is admin
+			if ($this->ion_auth->is_admin())
+			{
+				//Update the groups user belongs to
+				$groupData = $this->input->post('groups');
 
-			if (isset($groupData) && !empty($groupData)) {
+				if (isset($groupData) && !empty($groupData)) {
 
-				$this->ion_auth->remove_from_group('', $id);
+					$this->ion_auth->remove_from_group('', $id);
 
-				foreach ($groupData as $grp) {
-					$this->ion_auth->add_to_group($grp, $id);
+					foreach ($groupData as $grp) {
+						$this->ion_auth->add_to_group($grp, $id);
+					}
+
 				}
-
 			}
 
 			//update the password if it was posted
@@ -545,7 +557,14 @@ class Auth extends BASE_Controller {
 				//check to see if we are creating the user
 				//redirect them back to the admin page
 				$this->session->set_flashdata('message', "User Saved");
-				redirect("auth", 'refresh');
+				if ($this->ion_auth->is_admin())
+				{
+					redirect('auth', 'refresh');
+				}
+				else
+				{
+					redirect('/', 'refresh');
+				}
 			}
 		}
 
