@@ -1618,14 +1618,16 @@ class Ion_auth_model extends CI_Model
 		$this->trigger_events('pre_set_session');
 
 		$session_data = array(
-			'identity'       => $user->{$this->identity_column},
-			'username'       => $user->username,
-			'email'          => $user->email,
-			'mobile'         => $user->mobile,
-			'logo'           => $user->logo,
-			'role'           => $user->role,
-			'user_id'        => $user->id, //everyone likes to overwrite id so we'll use user_id
-			'old_last_login' => $user->last_login
+			'identity'            => $user->{$this->identity_column},
+			'username'            => $user->username,
+			'email'               => $user->email,
+			'mobile'              => $user->mobile,
+			'logo'                => $user->logo,
+			'role'                => $user->role,
+			'company_claim_title' => 'CEO',
+			'company_claim_name'  => '美丽说',
+			'user_id'             => $user->id, //everyone likes to overwrite id so we'll use user_id
+			'old_last_login'      => $user->last_login
 		);
 
 		$this->session->set_userdata($session_data);
