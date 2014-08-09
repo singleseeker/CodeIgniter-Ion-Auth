@@ -889,7 +889,7 @@ class Ion_auth_model extends CI_Model
 
 		$this->trigger_events('extra_where');
 
-		$query = $this->db->select($this->identity_column . ', username, email, id, password, active, last_login, mobile, real_name, logo, role')
+		$query = $this->db->select($this->identity_column . ', username, email, id, password, active, prov, city, last_login, mobile, real_name, logo, role')
 		                  ->where($this->identity_column, $this->db->escape_str($identity))
 		                  ->limit(1)
 		                  ->get($this->tables['users']);
@@ -1625,6 +1625,8 @@ class Ion_auth_model extends CI_Model
 			'mobile'              => $user->mobile,
 			'logo'                => $user->logo,
 			'role'                => $user->role,
+			'prov'                => $user->prov,
+			'city'                => $user->city,
 			'company_claim_title' => 'CEO',
 			'company_claim_name'  => '美丽说',
 			'user_id'             => $user->id, //everyone likes to overwrite id so we'll use user_id
