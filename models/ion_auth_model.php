@@ -1617,6 +1617,8 @@ class Ion_auth_model extends CI_Model
 
 		$this->trigger_events('pre_set_session');
 
+		$com_and_title = $this->get_user_com_and_title($user->id);
+
 		$session_data = array(
 			'identity'            => $user->{$this->identity_column},
 			'username'            => $user->username,
@@ -1624,8 +1626,8 @@ class Ion_auth_model extends CI_Model
 			'mobile'              => $user->mobile,
 			'logo'                => $user->logo,
 			'role'                => $user->role,
-			'company_claim_title' => 'CEO',
-			'company_claim_name'  => '美丽说',
+			'company_claim_title' => $com_and_title ? $com_and_title['title'] : '',
+			'company_claim_name'  => $com_and_title ? $com_and_title['com_name'] : '',
 			'user_id'             => $user->id, //everyone likes to overwrite id so we'll use user_id
 			'old_last_login'      => $user->last_login
 		);
@@ -1635,6 +1637,12 @@ class Ion_auth_model extends CI_Model
 		$this->trigger_events('post_set_session');
 
 		return TRUE;
+	}
+
+	public function get_user_com_and_title($user_id)
+	{
+		$sql = 'select com.com_name,claim.claim_des as title from tbl_claim claim inner join tbl_company com on claim.claim_item_id=com.com_id where claim_user_id='.(int)$user_id.' and claim_item_type="company" and claim_show=0';
+		return $this->db->query($sql)->row_array();
 	}
 
 	/**
