@@ -31,10 +31,10 @@ $config['collections']['login_attempts'] = 'login_attempts';
 | -------------------------------------------------------------------------
 | Database table names.
 */
-$config['tables']['users']           = 'auth_users';
-$config['tables']['groups']          = 'auth_groups';
-$config['tables']['users_groups']    = 'auth_users_groups';
-$config['tables']['login_attempts']  = 'auth_login_attempts';
+$config['tables']['users']           = 'tbl_front_user';
+$config['tables']['groups']          = 'tbl_front_groups';
+$config['tables']['users_groups']    = 'tbl_front_users_groups';
+$config['tables']['login_attempts']  = 'tbl_front_login_attempts';
 
 /*
  | Users table column and Group table column you want to join WITH.
@@ -66,7 +66,7 @@ $config['join']['groups'] = 'group_id';
  | Be careful how high you set max_rounds, I would do your own testing on how long it takes
  | to encrypt with x rounds.
  */
-$config['hash_method']    = 'bcrypt';	// sha1 or bcrypt, bcrypt is STRONGLY recommended
+$config['hash_method']    = 'sha1';	// sha1 or bcrypt, bcrypt is STRONGLY recommended
 $config['default_rounds'] = 8;		// This does not apply if random_rounds is set to true
 $config['random_rounds']  = FALSE;
 $config['min_rounds']     = 5;
@@ -158,7 +158,7 @@ $config['email_forgot_password_complete'] = 'new_password.tpl.php';
  | fbaa5e216d163a02ae630ab1a43372635dd374c0 with default salt.
  */
 $config['salt_length'] = 10;
-$config['store_salt']  = TRUE;
+$config['store_salt']  = FALSE;
 
 /*
  | -------------------------------------------------------------------------
