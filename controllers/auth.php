@@ -1,11 +1,15 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Auth extends BASE_Controller {
+class Auth extends MY_Controller {
+
+	private $data = array();
 
 	function __construct()
 	{
 		parent::__construct();
-		$this->load->library('auth/ion_auth');
+		$this->load->library('ion_auth');
+		$this->load->library('form_validation');
+        $this->form_validation->CI =& $this;
 		$this->load->helper('url');
 
 		// Load MongoDB library instead of native db driver if required
@@ -29,10 +33,10 @@ class Auth extends BASE_Controller {
 			//redirect them to the login page
 			redirect('auth/login', 'refresh');
 		}
-		elseif (!$this->ion_auth->is_admin()) //remove this elseif if you want to enable this for non-admins
+		elseif (!$this->ion_auth->is_admin())
 		{
 			//redirect them to the home page because they must be an administrator to view this
-			return show_error('You must be an administrator to view this page.');
+			redirect('/', 'refresh');
 		}
 		else
 		{
@@ -163,7 +167,7 @@ class Auth extends BASE_Controller {
 		}
 		else
 		{
-			$identity = $this->session->userdata('identity');
+			$identity = $this->session->userdata($this->config->item('identity', 'ion_auth'));
 
 			$change = $this->ion_auth->change_password($identity, $this->input->post('old'), $this->input->post('new'));
 
@@ -206,20 +210,10 @@ class Auth extends BASE_Controller {
 		}
 		else
 		{
-			// get identity from username or email
-			if ( $this->config->item('identity', 'ion_auth') == 'username' ){
-				$identity = $this->ion_auth->where('username', strtolower($this->input->post('email')))->users()->row();
-			}
-			else
-			{
-				$identity = $this->ion_auth->where('email', strtolower($this->input->post('email')))->users()->row();
-			}
-	            	if(empty($identity)) {
-		        	$this->ion_auth->set_message('forgot_password_email_not_found');
-		                $this->session->set_flashdata('message', $this->ion_auth->messages());
-                		redirect("auth/forgot_password", 'refresh');
-            		}
-            
+			// get identity for that email
+			$config_tables = $this->config->item('tables', 'ion_auth');
+			$identity = $this->db->where('email', $this->input->post('email'))->limit('1')->get($config_tables['users'])->row();
+
 			//run the forgotten password method to email an activation code to the user
 			$forgotten = $this->ion_auth->forgotten_password($identity->{$this->config->item('identity', 'ion_auth')});
 
@@ -404,13 +398,13 @@ class Auth extends BASE_Controller {
 			redirect('auth', 'refresh');
 		}
 
-		$tables = $this->config->item('tables','ion_auth');
-		
 		//validate form input
 		$this->form_validation->set_rules('first_name', $this->lang->line('create_user_validation_fname_label'), 'required|xss_clean');
-		$this->form_validation->set_rules('last_name', $this->lang->line('create_user_validation_lname_label'), 'required|xss_clean');
-		$this->form_validation->set_rules('email', $this->lang->line('create_user_validation_email_label'), 'required|valid_email|is_unique['.$tables['users'].'.email]');
-		$this->form_validation->set_rules('phone', $this->lang->line('create_user_validation_phone_label'), 'required|xss_clean');
+		$this->form_validation->set_rules('last_name', $this->lang->line('create_user_validation_fname_label'), 'required|xss_clean');
+		$this->form_validation->set_rules('email', $this->lang->line('create_user_validation_email_label'), 'required|valid_email');
+		$this->form_validation->set_rules('phone1', $this->lang->line('create_user_validation_phone1_label'), 'required|xss_clean|min_length[3]|max_length[3]');
+		$this->form_validation->set_rules('phone2', $this->lang->line('create_user_validation_phone2_label'), 'required|xss_clean|min_length[3]|max_length[3]');
+		$this->form_validation->set_rules('phone3', $this->lang->line('create_user_validation_phone3_label'), 'required|xss_clean|min_length[4]|max_length[4]');
 		$this->form_validation->set_rules('company', $this->lang->line('create_user_validation_company_label'), 'required|xss_clean');
 		$this->form_validation->set_rules('password', $this->lang->line('create_user_validation_password_label'), 'required|min_length[' . $this->config->item('min_password_length', 'ion_auth') . ']|max_length[' . $this->config->item('max_password_length', 'ion_auth') . ']|matches[password_confirm]');
 		$this->form_validation->set_rules('password_confirm', $this->lang->line('create_user_validation_password_confirm_label'), 'required');
@@ -418,14 +412,14 @@ class Auth extends BASE_Controller {
 		if ($this->form_validation->run() == true)
 		{
 			$username = strtolower($this->input->post('first_name')) . ' ' . strtolower($this->input->post('last_name'));
-			$email    = strtolower($this->input->post('email'));
+			$email    = $this->input->post('email');
 			$password = $this->input->post('password');
 
 			$additional_data = array(
 				'first_name' => $this->input->post('first_name'),
 				'last_name'  => $this->input->post('last_name'),
 				'company'    => $this->input->post('company'),
-				'phone'      => $this->input->post('phone'),
+				'phone'      => $this->input->post('phone1') . '-' . $this->input->post('phone2') . '-' . $this->input->post('phone3'),
 			);
 		}
 		if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data))
@@ -465,11 +459,23 @@ class Auth extends BASE_Controller {
 				'type'  => 'text',
 				'value' => $this->form_validation->set_value('company'),
 			);
-			$this->data['phone'] = array(
-				'name'  => 'phone',
-				'id'    => 'phone',
+			$this->data['phone1'] = array(
+				'name'  => 'phone1',
+				'id'    => 'phone1',
 				'type'  => 'text',
-				'value' => $this->form_validation->set_value('phone'),
+				'value' => $this->form_validation->set_value('phone1'),
+			);
+			$this->data['phone2'] = array(
+				'name'  => 'phone2',
+				'id'    => 'phone2',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('phone2'),
+			);
+			$this->data['phone3'] = array(
+				'name'  => 'phone3',
+				'id'    => 'phone3',
+				'type'  => 'text',
+				'value' => $this->form_validation->set_value('phone3'),
 			);
 			$this->data['password'] = array(
 				'name'  => 'password',
@@ -493,7 +499,7 @@ class Auth extends BASE_Controller {
 	{
 		$this->data['title'] = "Edit User";
 
-		if (!$this->ion_auth->logged_in() || (!$this->ion_auth->is_admin() && !($this->ion_auth->user()->row()->id == $id)))
+		if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin())
 		{
 			redirect('auth', 'refresh');
 		}
@@ -502,10 +508,18 @@ class Auth extends BASE_Controller {
 		$groups=$this->ion_auth->groups()->result_array();
 		$currentGroups = $this->ion_auth->get_users_groups($id)->result();
 
+		//process the phone number
+		if (isset($user->phone) && !empty($user->phone))
+		{
+			$user->phone = explode('-', $user->phone);
+		}
+
 		//validate form input
 		$this->form_validation->set_rules('first_name', $this->lang->line('edit_user_validation_fname_label'), 'required|xss_clean');
 		$this->form_validation->set_rules('last_name', $this->lang->line('edit_user_validation_lname_label'), 'required|xss_clean');
-		$this->form_validation->set_rules('phone', $this->lang->line('edit_user_validation_phone_label'), 'required|xss_clean');
+		$this->form_validation->set_rules('phone1', $this->lang->line('edit_user_validation_phone1_label'), 'required|xss_clean|min_length[3]|max_length[3]');
+		$this->form_validation->set_rules('phone2', $this->lang->line('edit_user_validation_phone2_label'), 'required|xss_clean|min_length[3]|max_length[3]');
+		$this->form_validation->set_rules('phone3', $this->lang->line('edit_user_validation_phone3_label'), 'required|xss_clean|min_length[4]|max_length[4]');
 		$this->form_validation->set_rules('company', $this->lang->line('edit_user_validation_company_label'), 'required|xss_clean');
 		$this->form_validation->set_rules('groups', $this->lang->line('edit_user_validation_groups_label'), 'xss_clean');
 
@@ -521,24 +535,20 @@ class Auth extends BASE_Controller {
 				'first_name' => $this->input->post('first_name'),
 				'last_name'  => $this->input->post('last_name'),
 				'company'    => $this->input->post('company'),
-				'phone'      => $this->input->post('phone'),
+				'phone'      => $this->input->post('phone1') . '-' . $this->input->post('phone2') . '-' . $this->input->post('phone3'),
 			);
 
-			// Only allow updating groups if user is admin
-			if ($this->ion_auth->is_admin())
-			{
-				//Update the groups user belongs to
-				$groupData = $this->input->post('groups');
+			//Update the groups user belongs to
+			$groupData = $this->input->post('groups');
 
-				if (isset($groupData) && !empty($groupData)) {
+			if (isset($groupData) && !empty($groupData)) {
 
-					$this->ion_auth->remove_from_group('', $id);
+				$this->ion_auth->remove_from_group('', $id);
 
-					foreach ($groupData as $grp) {
-						$this->ion_auth->add_to_group($grp, $id);
-					}
-
+				foreach ($groupData as $grp) {
+					$this->ion_auth->add_to_group($grp, $id);
 				}
+
 			}
 
 			//update the password if it was posted
@@ -557,14 +567,7 @@ class Auth extends BASE_Controller {
 				//check to see if we are creating the user
 				//redirect them back to the admin page
 				$this->session->set_flashdata('message', "User Saved");
-				if ($this->ion_auth->is_admin())
-				{
-					redirect('auth', 'refresh');
-				}
-				else
-				{
-					redirect('/', 'refresh');
-				}
+				redirect("auth", 'refresh');
 			}
 		}
 
@@ -597,11 +600,23 @@ class Auth extends BASE_Controller {
 			'type'  => 'text',
 			'value' => $this->form_validation->set_value('company', $user->company),
 		);
-		$this->data['phone'] = array(
-			'name'  => 'phone',
-			'id'    => 'phone',
+		$this->data['phone1'] = array(
+			'name'  => 'phone1',
+			'id'    => 'phone1',
 			'type'  => 'text',
-			'value' => $this->form_validation->set_value('phone', $user->phone),
+			'value' => $this->form_validation->set_value('phone1', $user->phone[0]),
+		);
+		$this->data['phone2'] = array(
+			'name'  => 'phone2',
+			'id'    => 'phone2',
+			'type'  => 'text',
+			'value' => $this->form_validation->set_value('phone2', $user->phone[1]),
+		);
+		$this->data['phone3'] = array(
+			'name'  => 'phone3',
+			'id'    => 'phone3',
+			'type'  => 'text',
+			'value' => $this->form_validation->set_value('phone3', $user->phone[2]),
 		);
 		$this->data['password'] = array(
 			'name' => 'password',

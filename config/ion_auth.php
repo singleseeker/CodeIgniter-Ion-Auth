@@ -21,8 +21,8 @@ $config['use_mongodb'] = FALSE;
 | $ mongorestore sql/mongo
 |
 */
-$config['collections']['users']          = 'users';
-$config['collections']['groups']         = 'groups';
+$config['collections']['users']          = 'tbl_front_user';
+$config['collections']['groups']         = 'tbl_front_users_groups';
 $config['collections']['login_attempts'] = 'login_attempts';
 
 /*
@@ -34,7 +34,7 @@ $config['collections']['login_attempts'] = 'login_attempts';
 $config['tables']['users']           = 'tbl_front_user';
 $config['tables']['groups']          = 'tbl_front_groups';
 $config['tables']['users_groups']    = 'tbl_front_users_groups';
-$config['tables']['login_attempts']  = 'tbl_front_login_attempts';
+$config['tables']['login_attempts']  = 'login_attempts';
 
 /*
  | Users table column and Group table column you want to join WITH.
@@ -63,14 +63,14 @@ $config['join']['groups'] = 'group_id';
  | If you are using Bcrypt the Admin password field also needs to be changed in order login as admin:
  | $2a$07$SeBknntpZror9uyftVopmu61qg0ms8Qv1yV6FG.kQOSM.9QhmTo36
  |
- | Be careful how high you set max_rounds, I would do your own testing on how long it takes
+ | Becareful how high you set max_rounds, I would do your own testing on how long it takes
  | to encrypt with x rounds.
  */
-$config['hash_method']    = 'sha1';	// sha1 or bcrypt, bcrypt is STRONGLY recommended
+$config['hash_method']    = 'sha1';	// IMPORTANT: Make sure this is set to either sha1 or bcrypt
 $config['default_rounds'] = 8;		// This does not apply if random_rounds is set to true
 $config['random_rounds']  = FALSE;
-$config['min_rounds']     = 5;
-$config['max_rounds']     = 9;
+$config['min_rounds']     = 6;
+$config['max_rounds']     = 10;
 
 /*
  | -------------------------------------------------------------------------
@@ -81,23 +81,22 @@ $config['max_rounds']     = 9;
  | The controller should check this function and act
  | appropriately. If this variable set to 0, there is no maximum.
  */
-$config['site_title']                 = "chuang86.com";       // Site Title, example.com
-$config['admin_email']                = "admin@chuang86.com"; // Admin Email, admin@example.com
+$config['site_title']                 = "IT桔子";       // Site Title, example.com
+$config['admin_email']                = 'admin@itjuzi.com'; // Admin Email, admin@example.com
 $config['default_group']              = 'members';           // Default group, use name
-$config['admin_group']                = 1;             // Default administrators group, use name
+$config['admin_group']                = 'admin';             // Default administrators group, use name
 $config['identity']                   = 'email';             // A database column which is used to login with
-$config['min_password_length']        = 8;                   // Minimum Required Length of Password
-$config['max_password_length']        = 20;                  // Maximum Allowed Length of Password
-$config['email_activation']           = FALSE;               // Email Activation for registration
+$config['min_password_length']        = 3;                   // Minimum Required Length of Password
+$config['max_password_length']        = 15;                  // Maximum Allowed Length of Password
+$config['email_activation']           = TRUE;                // Email Activation for registration
 $config['manual_activation']          = FALSE;               // Manual Activation for registration
 $config['remember_users']             = TRUE;                // Allow users to be remembered and enable auto-login
 $config['user_expire']                = 86500;               // How long to remember the user (seconds). Set to zero for no expiration
-$config['user_extend_on_login']       = FALSE;               // Extend the users cookies every time they auto-login
+$config['user_extend_on_login']       = FALSE;               // Extend the users cookies everytime they auto-login
 $config['track_login_attempts']       = FALSE;               // Track the number of failed login attempts for each user or ip.
-$config['track_login_ip_address']     = TRUE;                // Track login attempts by IP Address, if FALSE will track based on identity. (Default: TRUE)
 $config['maximum_login_attempts']     = 3;                   // The maximum number of failed login attempts.
-$config['lockout_time']               = 600;                 // The number of seconds to lockout an account due to exceeded attempts
-$config['forgot_password_expiration'] = 0;                   // The number of milliseconds after which a forgot password request will expire. If set to 0, forgot password requests will not expire.
+$config['lockout_time']               = 600;                 // The number of miliseconds to lockout an account due to exceeded attempts
+$config['forgot_password_expiration'] = 0;                   // The number of miliseconds after which a forgot password request will expire. If set to 0, forgot password requests will not expire.
 
 
 /*
@@ -110,7 +109,15 @@ $config['forgot_password_expiration'] = 0;                   // The number of mi
  */
 $config['use_ci_email'] = TRUE; // Send Email using the builtin CI email class, if false it will return the code and the identity
 $config['email_config'] = array(
-	'mailtype' => 'html',
+	'mailtype'    => 'html',
+	'protocol'    => 'smtp',
+	'smtp_host'   => 'smtpcloud.sohu.com',
+	'smtp_port'   => 25,
+	'smtp_user'   => 'postmaster@itjuzi.sendcloud.org',
+	'smtp_pass'   => 'qJL3EJCLKq1RoyoB',
+	'charset'     => 'utf-8',
+	'newline'     => "\r\n",
+	'wordwrap'    => TRUE
 );
 
 /*
@@ -120,7 +127,7 @@ $config['email_config'] = array(
  | Folder where email templates are stored.
  | Default: auth/
  */
-$config['email_templates'] = 'user/email/';
+$config['email_templates'] = 'auth/email/';
 
 /*
  | -------------------------------------------------------------------------
@@ -165,7 +172,6 @@ $config['store_salt']  = FALSE;
  | Message Delimiters.
  | -------------------------------------------------------------------------
  */
-$config['delimiters_source']       = 'config'; 	// "config" = use the settings defined here, "form_validation" = use the settings defined in CI's form validation library
 $config['message_start_delimiter'] = '<p>'; 	// Message start delimiter
 $config['message_end_delimiter']   = '</p>'; 	// Message end delimiter
 $config['error_start_delimiter']   = '<p>';		// Error mesage start delimiter

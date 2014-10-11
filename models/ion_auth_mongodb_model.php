@@ -893,7 +893,7 @@ class Ion_auth_mongodb_model extends CI_Model {
 					'identity'       => $user->{$this->identity_column},
 					'username'       => $user->username,
 					'email'          => $user->email,
-					'user_id'        => $user->_id->{'$id'},
+					'user_id'        => $user->_id,
 					'old_last_login' => $user->last_login
                 );
                 $this->session->set_userdata($session_data);
@@ -1395,7 +1395,7 @@ class Ion_auth_mongodb_model extends CI_Model {
 	 *
 	 * @return bool
 	 */
-	public function remove_from_group($group_id = FALSE, $user_id = FALSE)
+	public function remove_from_group($group_name = FALSE, $user_id = FALSE)
 	{
 		$this->trigger_events('remove_from_group');
 
@@ -1414,9 +1414,9 @@ class Ion_auth_mongodb_model extends CI_Model {
 		else
 		{
 			return $this->mongo_db
-			->where('_id', new MongoId($user_id))
-			->pull('groups', $group_id)
-			->update($this->collections['users']);
+				->where('_id', new MongoId($user_id))
+				->pull('groups', array($group_id))
+				->update($this->collections['users']);
 		}
 	}
 
@@ -1747,7 +1747,7 @@ class Ion_auth_mongodb_model extends CI_Model {
 			$user = (object) $document[0];
 
 			// Update last login timestamp
-			$this->update_last_login($user->_id);
+			$this->update_last_login($user->id);
 
 			// And set user session data
 			$this->session->set_userdata(array(
@@ -1833,16 +1833,16 @@ class Ion_auth_mongodb_model extends CI_Model {
 			{
 				$this->set_error('group_already_exists');
 				return FALSE;
-			}
+			}	
 
-			$data['name'] = $group_name;
+			$data['name'] = $group_name;		
 		}
-
+		
 
 		// IMPORTANT!! Third parameter was string type $description; this following code is to maintain backward compatibility
 		// New projects should work with 3rd param as array
 		if (is_string($additional_data)) $additional_data = array('description' => $additional_data);
-
+		
 
 		//filter out any data passed that doesnt have a matching column in the groups table
 		//and merge the set group data and the additional data
@@ -2188,7 +2188,7 @@ class Ion_auth_mongodb_model extends CI_Model {
 		}
 		elseif ( ! isset($data['id']) && isset($data['_id']))
 		{
-			$data['id'] = $data['_id']->{'$id'};
+			$data['id'] = $data['_id'];
 		}
 
 		return is_object($result) ? (object) $data : $data;

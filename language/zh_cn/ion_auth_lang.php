@@ -34,6 +34,7 @@ $lang['deactivate_successful'] 		  	 = '账号已关闭';
 $lang['deactivate_unsuccessful'] 	  	 = '账号关闭失败';
 $lang['activation_email_successful'] 	  	 = '已发送激活账号的电子邮件';
 $lang['activation_email_unsuccessful']   	 = '发送激活账号的电子邮件失败';
+$lang['login_unsuccessful_not_active'] = '帐号暂未激活';
 
 // Login / Logout
 $lang['login_successful'] 		  	 = '登录成功';
@@ -45,6 +46,7 @@ $lang['update_successful'] 		 	 = '账号资料已更新';
 $lang['update_unsuccessful'] 		 	 = '更新账号资料失败';
 $lang['delete_successful'] 		 	 = '账号已删除';
 $lang['delete_unsuccessful'] 		 	 = '删除账号失败';
+
 
 // Email Subjects
 $lang['email_forgotten_password_subject']    = '密码重设验证';
