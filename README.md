@@ -1,4 +1,4 @@
-#Ion Auth 2
+#Ion Auth 2 [hook juzi api new]
 ###The future of authentication
 by [Ben Edmunds](http://benedmunds.com)
 
